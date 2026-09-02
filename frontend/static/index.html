@@ -3,49 +3,218 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Agent</title>
-<!-- Optional: used only to draw A2UI Icon components. If it can't load (offline/
-     corp network), icons fall back to showing their name as text. -->
+<title>Fantasy Football Draft Assistant</title>
+
+<!-- Material Symbols Font -->
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined">
+<!-- Google Fonts Outfit & Inter -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap">
+<!-- Canvas Confetti CDN -->
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+
 <style>
-  :root { --accent:#1a73e8; --bg:#f6f8fa; --border:#dfe3e8; }
-  * { box-sizing:border-box; }
-  body { margin:0; font-family:system-ui,sans-serif; background:var(--bg); display:flex; flex-direction:column; height:100vh; }
-  header { background:var(--accent); color:#fff; padding:.9rem 1.2rem; font-weight:700; }
-  #log { flex:1; overflow-y:auto; padding:1.2rem; max-width:780px; width:100%; margin:0 auto; }
-  .msg { margin:.6rem 0; }
-  .msg.user { text-align:right; }
-  .bubble { display:inline-block; padding:.6rem .9rem; border-radius:12px; background:#fff; border:1px solid var(--border); text-align:left; max-width:90%; white-space:pre-wrap; }
-  .msg.user .bubble { background:var(--accent); color:#fff; border:none; }
-  /* When the reply is an A2UI card, drop the bubble chrome so the card stands alone. */
-  .bubble.rich { background:transparent; border:none; padding:0; max-width:100%; white-space:normal; }
-  form { display:flex; gap:.5rem; padding:1rem; border-top:1px solid var(--border); background:#fff; }
-  input { flex:1; padding:.7rem; border:1px solid var(--border); border-radius:8px; font-size:1rem; }
-  button { padding:.7rem 1.1rem; border:none; border-radius:8px; background:var(--accent); color:#fff; font-weight:600; cursor:pointer; }
+  :root {
+    --accent: #2d6a4f;
+    --accent-gold: #f4a261;
+    --accent-bright: #52b788;
+    --bg-dark: #0b1712;
+    --panel-bg: #14281f;
+    --border: #234737;
+    --text-primary: #ecf3f0;
+    --text-muted: #9bb0a5;
+    --bubble-agent: #1a3328;
+    --bubble-user: #2d6a4f;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background: var(--bg-dark);
+    color: var(--text-primary);
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    background-image: 
+      radial-gradient(circle at 50% 0%, rgba(82, 183, 136, 0.12) 0%, transparent 60%),
+      linear-gradient(180deg, #0b1712 0%, #070e0a 100%);
+  }
+  header {
+    background: linear-gradient(135deg, #112a1f 0%, #091a13 100%);
+    border-bottom: 2px solid var(--border);
+    padding: 1rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+  }
+  .header-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .header-icon {
+    font-size: 2rem;
+    filter: drop-shadow(0 2px 4px rgba(244, 162, 97, 0.4));
+  }
+  .header-title {
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.35rem;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    background: linear-gradient(90deg, #ffffff 0%, var(--accent-bright) 60%, var(--accent-gold) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin: 0;
+  }
+  .header-badge {
+    background: rgba(244, 162, 97, 0.15);
+    border: 1px solid var(--accent-gold);
+    color: var(--accent-gold);
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 0.25rem 0.6rem;
+    border-radius: 20px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  #log {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1.25rem;
+    max-width: 860px;
+    width: 100%;
+    margin: 0 auto;
+  }
+  .msg { margin: 0.8rem 0; }
+  .msg.user { text-align: right; }
+  .bubble {
+    display: inline-block;
+    padding: 0.85rem 1.1rem;
+    border-radius: 14px;
+    background: var(--bubble-agent);
+    border: 1px solid var(--border);
+    text-align: left;
+    max-width: 88%;
+    white-space: pre-wrap;
+    line-height: 1.5;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+  }
+  .msg.user .bubble {
+    background: linear-gradient(135deg, var(--accent) 0%, #1e4a37 100%);
+    color: #ffffff;
+    border: 1px solid var(--accent-bright);
+    border-top-right-radius: 2px;
+  }
+  .msg.agent .bubble {
+    border-top-left-radius: 2px;
+  }
+  .bubble.rich {
+    background: transparent;
+    border: none;
+    padding: 0;
+    max-width: 100%;
+    white-space: normal;
+  }
+  form {
+    display: flex;
+    gap: 0.6rem;
+    padding: 1rem 1.25rem;
+    border-top: 1px solid var(--border);
+    background: #0d1f18;
+    max-width: 860px;
+    width: 100%;
+    margin: 0 auto;
+    border-radius: 16px 16px 0 0;
+  }
+  input {
+    flex: 1;
+    padding: 0.85rem 1rem;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    font-size: 0.95rem;
+    background: #08130d;
+    color: var(--text-primary);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  input:focus {
+    border-color: var(--accent-bright);
+    box-shadow: 0 0 0 2px rgba(82, 183, 136, 0.2);
+  }
+  button {
+    padding: 0.85rem 1.3rem;
+    border: none;
+    border-radius: 10px;
+    background: linear-gradient(135deg, var(--accent-bright) 0%, var(--accent) 100%);
+    color: #ffffff;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+    box-shadow: 0 2px 8px rgba(82, 183, 136, 0.3);
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(82, 183, 136, 0.4);
+  }
+  button:active {
+    transform: translateY(0);
+  }
+
+  /* Markdown Content Formatting inside bubbles */
+  .bubble img {
+    max-width: 100%;
+    border-radius: 10px;
+    margin: 0.6rem 0;
+    border: 1px solid var(--border);
+  }
 
   /* --- A2UI component styles (Card, Column, Row, Text, Divider, List, Image, Icon) --- */
-  .a2card { border:1px solid var(--border); border-radius:12px; padding:1rem; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.06); max-width:100%; }
-  .a2card + .a2card, .a2col > .a2card { margin-top:.6rem; }
-  .a2col { display:flex; flex-direction:column; gap:.4rem; }
-  .a2row { display:flex; flex-direction:row; gap:.6rem; align-items:center; flex-wrap:wrap; }
-  .a2row.between { justify-content:space-between; }
-  .a2text { margin:0; line-height:1.4; }
-  .a2text.a2-h1 { font-size:1.5rem; font-weight:700; }
-  .a2text.a2-h2 { font-size:1.25rem; font-weight:700; }
-  .a2text.a2-h3 { font-size:1.1rem; font-weight:600; }
-  .a2text.a2-h4 { font-size:1rem; font-weight:600; }
-  .a2text.a2-caption { font-size:.85rem; color:#666; }
-  .a2divider { border:none; border-top:1px solid var(--border); margin:.4rem 0; width:100%; }
-  .a2img { max-width:100%; border-radius:8px; display:block; }
-  .material-symbols-outlined { font-family:'Material Symbols Outlined'; font-size:1.25rem; line-height:1; vertical-align:middle; color:var(--accent); }
+  .a2card {
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.1rem;
+    background: var(--panel-bg);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    max-width: 100%;
+  }
+  .a2card + .a2card, .a2col > .a2card { margin-top: 0.6rem; }
+  .a2col { display: flex; flex-direction: column; gap: 0.5rem; }
+  .a2row { display: flex; flex-direction: row; gap: 0.65rem; align-items: center; flex-wrap: wrap; }
+  .a2row.between { justify-content: space-between; }
+  .a2text { margin: 0; line-height: 1.45; }
+  .a2text.a2-h1 { font-family: 'Outfit', sans-serif; font-size: 1.5rem; font-weight: 800; color: var(--accent-gold); }
+  .a2text.a2-h2 { font-family: 'Outfit', sans-serif; font-size: 1.25rem; font-weight: 700; color: var(--accent-bright); }
+  .a2text.a2-h3 { font-family: 'Outfit', sans-serif; font-size: 1.1rem; font-weight: 600; }
+  .a2text.a2-h4 { font-size: 1rem; font-weight: 600; }
+  .a2text.a2-caption { font-size: 0.85rem; color: var(--text-muted); }
+  .a2divider { border: none; border-top: 1px solid var(--border); margin: 0.5rem 0; width: 100%; }
+  .a2img { max-width: 100%; border-radius: 10px; display: block; border: 1px solid var(--border); }
+  .material-symbols-outlined { font-family: 'Material Symbols Outlined'; font-size: 1.25rem; line-height: 1; vertical-align: middle; color: var(--accent-gold); }
 </style>
 </head>
 <body>
-<header>Your Agent</header>
+
+<header>
+  <div class="header-brand">
+    <span class="header-icon">🏈</span>
+    <div>
+      <h1 class="header-title">Fantasy Football Draft Assistant</h1>
+    </div>
+  </div>
+  <span class="header-badge">AI Draft HQ</span>
+</header>
+
 <div id="log"></div>
+
 <form id="form">
-  <input id="input" placeholder="Ask something…" autocomplete="off" autofocus>
-  <button>Send</button>
+  <input id="input" placeholder="Draft a player, search rankings, check injuries…" autocomplete="off" autofocus>
+  <button type="submit">Send 🏈</button>
 </form>
 
 <script>
@@ -62,14 +231,41 @@ function bubble(who) {
   return b;
 }
 
+/* Confetti trigger on draft events */
+function fireDraftConfetti() {
+  if (typeof confetti === 'function') {
+    // Center burst
+    confetti({
+      particleCount: 80,
+      spread: 80,
+      origin: { y: 0.6 },
+      colors: ['#2d6a4f', '#f4a261', '#ffffff', '#52b788', '#8b4513']
+    });
+    // Side bursts
+    setTimeout(() => {
+      confetti({
+        particleCount: 45,
+        angle: 60,
+        spread: 55,
+        origin: { x: 0, y: 0.7 },
+        colors: ['#f4a261', '#ffffff', '#52b788']
+      });
+      confetti({
+        particleCount: 45,
+        angle: 120,
+        spread: 55,
+        origin: { x: 1, y: 0.7 },
+        colors: ['#f4a261', '#ffffff', '#52b788']
+      });
+    }, 250);
+  }
+}
+
 /* ----------------------------------------------------------------------------
  * A2UI mini-renderer (v0.8 Basic Catalog subset).
  * Renders Card / Column / Row / Text / Divider / List / Image / Icon.
- * Anything else falls back to plain text (see renderReply). All text goes in via
- * textContent and image URLs are validated, so agent output can't inject HTML.
  * -------------------------------------------------------------------------- */
 
-// A "bound value" is usually {literalString: "..."}; we only support literals.
 function boundStr(v) {
   if (v == null) return "";
   if (typeof v === "string") return v;
@@ -77,7 +273,6 @@ function boundStr(v) {
   return "";
 }
 
-// child ids of a component's props: single `child` and/or `children.explicitList`.
 function childIds(props) {
   const ids = [];
   if (props && typeof props.child === "string") ids.push(props.child);
@@ -86,11 +281,10 @@ function childIds(props) {
   return ids;
 }
 
-// A2UI icon names are camelCase (locationOn); Material Symbols wants snake_case.
 function iconName(n) { return String(n || "").replace(/([a-z0-9])([A-Z])/g, "$1_$2").replace(/\s+/g, "_").toLowerCase(); }
 
 function buildNode(id, comps, seen) {
-  if (!id || seen.has(id)) return null;   // missing / cycle guard
+  if (!id || seen.has(id)) return null;
   seen.add(id);
   const spec = comps[id];
   if (!spec || typeof spec !== "object") return null;
@@ -123,19 +317,17 @@ function buildNode(id, comps, seen) {
       return el("hr", "a2divider");
     case "Image": {
       const src = boundStr(props.url || props.src);
-      if (!/^https?:\/\//i.test(src)) return null;   // only allow safe URLs
+      if (!/^https?:\/\//i.test(src)) return null;
       const img = el("img", "a2img"); img.src = src; img.alt = boundStr(props.alt) || ""; return img;
     }
     case "Icon": {
       const s = el("span", "material-symbols-outlined"); s.textContent = iconName(boundStr(props.name) || props.name); return s;
     }
     default:
-      return null;   // unknown component -> skipped (text fallback covers content)
+      return null;
   }
 }
 
-// Render one or more A2UI messages (beginRendering + surfaceUpdate) into `container`.
-// Returns true if anything was drawn.
 function renderSurface(messages, container) {
   const comps = {};
   const roots = [];
@@ -145,7 +337,7 @@ function renderSurface(messages, container) {
     if (su && Array.isArray(su.components)) for (const c of su.components) if (c && c.id && c.component) comps[c.id] = c.component;
   }
   let rootIds = roots.filter(r => comps[r]);
-  if (rootIds.length === 0) {   // no valid root given -> infer un-referenced components
+  if (rootIds.length === 0) {
     const referenced = new Set();
     for (const id in comps) { const spec = comps[id]; childIds(spec[Object.keys(spec)[0]] || {}).forEach(c => referenced.add(c)); }
     rootIds = Object.keys(comps).filter(id => !referenced.has(id));
@@ -155,7 +347,6 @@ function renderSurface(messages, container) {
   return drew;
 }
 
-// Fallback: pull every Text value out of the messages as plain text.
 function flattenText(messages) {
   const out = [];
   for (const m of messages) {
@@ -165,13 +356,34 @@ function flattenText(messages) {
   return out.join("\n").trim();
 }
 
-function renderReply(b, parts) {
-  b.textContent = "";   // clear the "…" placeholder
+function renderReply(b, parts, userMessageText) {
+  b.textContent = "";
   const texts = parts.filter(p => p && (p.kind === "text" || (!p.kind && p.text))).map(p => p.text || "");
   const a2ui = parts.filter(p => p && p.kind === "a2ui" && p.data).map(p => p.data);
 
   const textStr = texts.join("\n").trim();
-  if (textStr) b.appendChild(el("div", null, textStr));
+  if (textStr) {
+    // Basic Markdown Image parsing for image URLs inside markdown text
+    const imgRegex = /!\[(.*?)\]\((https?:\/\/[^\s\)]+)\)/g;
+    let match;
+    let lastIndex = 0;
+    const container = el("div", null);
+
+    while ((match = imgRegex.exec(textStr)) !== null) {
+      if (match.index > lastIndex) {
+        container.appendChild(document.createTextNode(textStr.slice(lastIndex, match.index)));
+      }
+      const img = el("img");
+      img.src = match[2];
+      img.alt = match[1] || "Player Welcome Banner";
+      container.appendChild(img);
+      lastIndex = imgRegex.lastIndex;
+    }
+    if (lastIndex < textStr.length) {
+      container.appendChild(document.createTextNode(textStr.slice(lastIndex)));
+    }
+    b.appendChild(container);
+  }
 
   if (a2ui.length) {
     b.classList.add("rich");
@@ -179,9 +391,19 @@ function renderReply(b, parts) {
   }
   if (!b.childNodes.length) b.textContent = "(no response)";
   log.scrollTop = log.scrollHeight;
+
+  // Detect draft action -> trigger confetti
+  const lowerUser = (userMessageText || "").toLowerCase();
+  const lowerReply = textStr.toLowerCase();
+  if (
+    lowerUser.includes("draft") ||
+    lowerReply.includes("welcome to the squad") ||
+    lowerReply.includes("drafted")
+  ) {
+    fireDraftConfetti();
+  }
 }
 
-// The proxy returns { parts: [{kind:"text",text} | {kind:"a2ui",data}] }.
 form.addEventListener("submit", async (ev) => {
   ev.preventDefault();
   const text = input.value.trim();
@@ -190,15 +412,16 @@ form.addEventListener("submit", async (ev) => {
   input.value = "";
   const b = bubble("agent"); b.textContent = "…";
   try {
-    const res = await fetch("/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ message: text }) });
-    // Read as text first, then parse. If the proxy ever returns a non-JSON error
-    // page (e.g. a plain "Internal Server Error"), show that body instead of a
-    // cryptic "Unexpected token" JSON error.
+    const res = await fetch("/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: text })
+    });
     const raw = await res.text();
     let data;
     try { data = JSON.parse(raw); }
     catch { throw new Error(`Server returned non-JSON (HTTP ${res.status}). ${raw.slice(0, 300)}`); }
-    renderReply(b, data.parts || []);
+    renderReply(b, data.parts || [], text);
   } catch (e) {
     b.textContent = "Error: " + e.message;
   }
