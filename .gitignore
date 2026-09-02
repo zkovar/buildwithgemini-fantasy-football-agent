@@ -221,5 +221,7 @@ node_modules/
 application_default_credentials.json
 *-sa-key.json
 service-account*.json
-# Keep the demo GIF (README embeds it); ignore the large raw recording.
+# Keep the demo GIF and webm recording (README embeds it)
+!demo.gif
+!fantasy_football_demo.webm
 *.webm
